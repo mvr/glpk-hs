@@ -41,3 +41,7 @@ library
                     Data.LinearProgram.Types
   c-sources:        glpk/glpk.c
   extra-libraries:  glpk
+
+executable example1
+  build-depends:    base >= 4 && < 5, glpk-hs, linear
+  main-is: examples/example1.hs

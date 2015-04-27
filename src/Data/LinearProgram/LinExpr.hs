@@ -1,6 +1,6 @@
 {-# LANGUAGE FlexibleInstances, MultiParamTypeClasses, DeriveFunctor #-}
 module Data.LinearProgram.LinExpr (LinExpr(..), LinFunc, solve, substituteExpr, simplifyExpr,
-        constTerm, coeffTerm, funcToExpr, linCombination) where
+        constTerm, coeffTerm, funcToExpr, var, varSum, linCombination) where
 
 import Prelude hiding (lookup, filter, foldr)
 
@@ -21,6 +21,14 @@ coeffTerm (LinExpr a _) = a
 
 funcToExpr :: (Num c) => LinFunc v c -> LinExpr v c
 funcToExpr = flip LinExpr 0
+
+-- | Given a variable @v@, returns the function equivalent to @v@.
+var :: (Ord v, Num c) => v -> LinFunc v c
+var v = M.singleton v 1
+
+-- | Equivalent to @'vsum' . 'map' 'var'@.
+varSum :: (Ord v, Num c) => [v] -> LinFunc v c
+varSum vs = M.fromList [(v, 1) | v <- vs]
 
 {-# INLINE linCombination #-}
 -- | Given a set of basic variables and coefficients, returns the linear combination obtained
