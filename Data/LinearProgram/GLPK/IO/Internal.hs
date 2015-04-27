@@ -115,12 +115,11 @@ readGLPLP file = execLPT $ do
                 return (i, name)
                         | (i, name) <- assocs names]
         rowContents <- lift getRows
-        sequence_ [do
-                bds <- lift $ rowBounds i
-                name <- lift $ getRowName i
-                maybe constrain constrain' name
+        sequence_ [do bds <- lift $ rowBounds i
+                      name <- lift $ getRowName i
+                      maybe constrain constrain' name
                         (linCombination [(v, names ! j) | (j, v) <- row]) bds
-                        | (i, row) <- rowContents]
+                  | (i, row) <- rowContents]
         obj <- lift $ sequence [do
                 c <- getObjCoef i
                 return (name, c) | (i, name) <- assocs names]
