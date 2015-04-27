@@ -49,9 +49,10 @@ import Control.Monad.Identity
 
 import Data.Map
 import Data.Monoid
-import Data.Functor
+import Linear.Vector
 
 import Data.LinearProgram.Common
+import Data.LinearProgram.LinExpr
 
 -- | A simple monad for constructing linear programs.  This library is intended to be able to link to
 -- a variety of different linear programming implementations.
@@ -60,26 +61,26 @@ type LPM v c = LPT v c Identity
 -- | A simple monad transformer for constructing linear programs in an arbitrary monad.
 type LPT v c = StateT (LP v c)
 
-runLPM :: (Ord v, Group c) => LPM v c a -> (a, LP v c)
+runLPM :: (Ord v, Num c) => LPM v c a -> (a, LP v c)
 runLPM = runIdentity . runLPT
 
-runLPT :: (Ord v, Group c) => LPT v c m a -> m (a, LP v c)
+runLPT :: (Ord v, Num c) => LPT v c m a -> m (a, LP v c)
 runLPT m = runStateT m (LP Max zero [] mempty mempty)
 
 -- | Constructs a linear programming problem.
-execLPM :: (Ord v, Group c) => LPM v c a -> LP v c
+execLPM :: (Ord v, Num c) => LPM v c a -> LP v c
 execLPM = runIdentity . execLPT
 
 -- | Constructs a linear programming problem in the specified monad.
-execLPT :: (Ord v, Group c, Monad m) => LPT v c m a -> m (LP v c)
+execLPT :: (Ord v, Num c, Monad m) => LPT v c m a -> m (LP v c)
 execLPT = liftM snd . runLPT
 
 -- | Runs the specified operation in the linear programming monad.
-evalLPM :: (Ord v, Group c) => LPM v c a -> a
+evalLPM :: (Ord v, Num c) => LPM v c a -> a
 evalLPM = runIdentity . evalLPT
 
 -- | Runs the specified operation in the linear programming monad transformer.
-evalLPT :: (Ord v, Group c, Monad m) => LPT v c m a -> m a
+evalLPT :: (Ord v, Num c, Monad m) => LPT v c m a -> m a
 evalLPT = liftM fst . runLPT
 
 -- | Sets the optimization direction of the linear program: maximization or minimization.
@@ -87,32 +88,32 @@ evalLPT = liftM fst . runLPT
 setDirection :: (MonadState (LP v c) m) => Direction -> m ()
 setDirection dir = modify (\ lp -> lp{direction = dir})
 
-{-# SPECIALIZE equal :: (Ord v, Group c) => LinFunc v c -> LinFunc v c -> LPM v c (),
-        (Ord v, Group c, Monad m) => LinFunc v c -> LinFunc v c -> LPT v c m () #-}
-{-# SPECIALIZE leq :: (Ord v, Group c) => LinFunc v c -> LinFunc v c -> LPM v c (),
-        (Ord v, Group c, Monad m) => LinFunc v c -> LinFunc v c -> LPT v c m () #-}
-{-# SPECIALIZE geq :: (Ord v, Group c) => LinFunc v c -> LinFunc v c -> LPM v c (),
-        (Ord v, Group c, Monad m) => LinFunc v c -> LinFunc v c -> LPT v c m () #-}
+{-# SPECIALIZE equal :: (Ord v, Num c) => LinFunc v c -> LinFunc v c -> LPM v c (),
+        (Ord v, Num c, Monad m) => LinFunc v c -> LinFunc v c -> LPT v c m () #-}
+{-# SPECIALIZE leq :: (Ord v, Num c) => LinFunc v c -> LinFunc v c -> LPM v c (),
+        (Ord v, Num c, Monad m) => LinFunc v c -> LinFunc v c -> LPT v c m () #-}
+{-# SPECIALIZE geq :: (Ord v, Num c) => LinFunc v c -> LinFunc v c -> LPM v c (),
+        (Ord v, Num c, Monad m) => LinFunc v c -> LinFunc v c -> LPT v c m () #-}
 -- | Specifies the relationship between two functions in the variables.  So, for example,
 --
 -- > equal (f ^+^ g) h
 --
 -- constrains the value of @h@ to be equal to the value of @f@ plus the value of @g@.
-equal, leq, geq :: (Ord v, Group c, MonadState (LP v c) m) => LinFunc v c -> LinFunc v c -> m ()
-equal f g = equalTo (f ^-^ g) zero
-leq f g = leqTo (f ^-^ g) zero
+equal, leq, geq :: (Ord v, Num c, MonadState (LP v c) m) => LinFunc v c -> LinFunc v c -> m ()
+equal f g = equalTo (f ^-^ g) 0
+leq f g = leqTo (f ^-^ g) 0
 geq = flip leq
 
-{-# SPECIALIZE equal' :: (Ord v, Group c) => String -> LinFunc v c -> LinFunc v c -> LPM v c (),
-        (Ord v, Group c, Monad m) => String -> LinFunc v c -> LinFunc v c -> LPT v c m () #-}
-{-# SPECIALIZE geq' :: (Ord v, Group c) => String -> LinFunc v c -> LinFunc v c -> LPM v c (),
-        (Ord v, Group c, Monad m) => String -> LinFunc v c -> LinFunc v c -> LPT v c m () #-}
-{-# SPECIALIZE leq' :: (Ord v, Group c) => String -> LinFunc v c -> LinFunc v c -> LPM v c (),
-        (Ord v, Group c, Monad m) => String -> LinFunc v c -> LinFunc v c -> LPT v c m () #-}
+{-# SPECIALIZE equal' :: (Ord v, Num c) => String -> LinFunc v c -> LinFunc v c -> LPM v c (),
+        (Ord v, Num c, Monad m) => String -> LinFunc v c -> LinFunc v c -> LPT v c m () #-}
+{-# SPECIALIZE geq' :: (Ord v, Num c) => String -> LinFunc v c -> LinFunc v c -> LPM v c (),
+        (Ord v, Num c, Monad m) => String -> LinFunc v c -> LinFunc v c -> LPT v c m () #-}
+{-# SPECIALIZE leq' :: (Ord v, Num c) => String -> LinFunc v c -> LinFunc v c -> LPM v c (),
+        (Ord v, Num c, Monad m) => String -> LinFunc v c -> LinFunc v c -> LPT v c m () #-}
 -- | Specifies the relationship between two functions in the variables, with a label on the constraint.
-equal', leq', geq' :: (Ord v, Group c, MonadState (LP v c) m) => String -> LinFunc v c -> LinFunc v c -> m ()
-equal' lab f g = equalTo' lab (f ^-^ g) zero
-leq' lab f g = leqTo' lab (f ^-^ g) zero
+equal', leq', geq' :: (Ord v, Num c, MonadState (LP v c) m) => String -> LinFunc v c -> LinFunc v c -> m ()
+equal' lab f g = equalTo' lab (f ^-^ g) 0
+leq' lab f g = leqTo' lab (f ^-^ g) 0
 geq' = flip . leq'
 
 {-# SPECIALIZE equalTo :: LinFunc v c -> c -> LPM v c (), Monad m => LinFunc v c -> c -> LPT v c m () #-}
@@ -215,18 +216,18 @@ setObjective :: MonadState (LP v c) m => LinFunc v c -> m ()
 setObjective obj = modify setObj where
         setObj lp = lp{objective = obj}
 
-{-# SPECIALIZE addObjective :: (Ord v, Group c) => LinFunc v c -> LPM v c (),
-        (Ord v, Group c, Monad m) => LinFunc v c -> LPT v c m () #-}
+{-# SPECIALIZE addObjective :: (Ord v, Num c) => LinFunc v c -> LPM v c (),
+        (Ord v, Num c, Monad m) => LinFunc v c -> LPT v c m () #-}
 -- | Adds this function to the objective function.
-addObjective :: (Ord v, Group c, MonadState (LP v c) m) => LinFunc v c -> m ()
+addObjective :: (Ord v, Num c, MonadState (LP v c) m) => LinFunc v c -> m ()
 addObjective obj = modify addObj where
         addObj lp@LP{..} = lp {objective = obj ^+^ objective}
 
-{-# SPECIALIZE addWeightedObjective :: (Ord v, Module r c) => r -> LinFunc v c -> LPM v c (),
-        (Ord v, Module r c, Monad m) => r -> LinFunc v c -> LPT v c m () #-}
+{-# SPECIALIZE addWeightedObjective :: (Ord v, Num c) => c -> LinFunc v c -> LPM v c (),
+        (Ord v, Num c, Monad m) => c -> LinFunc v c -> LPT v c m () #-}
 -- | Adds this function to the objective function, with the specified weight.  Equivalent to
 -- @'addObjective' (wt '*^' obj)@.
-addWeightedObjective :: (Ord v, Module r c, MonadState (LP v c) m) => r -> LinFunc v c -> m ()
+addWeightedObjective :: (Ord v, Num c, MonadState (LP v c) m) => c -> LinFunc v c -> m ()
 addWeightedObjective wt obj = addObjective (wt *^ obj)
 
 {-# SPECIALIZE setVarBounds :: (Ord v, Ord c) => v -> Bounds c -> LPM v c (),
