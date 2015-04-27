@@ -9,10 +9,10 @@
 -- If you wish to generate new variables on an ad-hoc basis, rather than supplying your own variable type, use the
 -- 'VSupply' or 'VSupplyT' monads in your transformer stack, as in @'LPT' 'Var' c 'VSupply'@ or
 -- @'LPT' 'Var' c ('VSupplyT' 'IO')@.  To generate new variables, use 'supplyNew' or 'supplyN'.
-module Control.Monad.LPMonad (
-        module Control.Monad.LPMonad.Internal,
+module Data.LinearProgram.LPMonad (
+        module Data.LinearProgram.LPMonad.Internal,
         -- * Generation of new variables
-        module Control.Monad.LPMonad.Supply,
+        module Data.LinearProgram.LPMonad.Supply,
         -- * Solvers
         quickSolveMIP,
         quickSolveLP,
@@ -32,8 +32,8 @@ import Control.Monad.Trans (MonadIO (..))
 import Data.Map (Map)
 
 import Data.LinearProgram.Common
-import Control.Monad.LPMonad.Internal
-import Control.Monad.LPMonad.Supply
+import Data.LinearProgram.LPMonad.Internal
+import Data.LinearProgram.LPMonad.Supply
 
 import Data.LinearProgram.GLPK.Solver
 import Data.LinearProgram.GLPK.IO

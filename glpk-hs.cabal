@@ -16,14 +16,12 @@ Description:
     Then "Data.LinearProgram.GLPK" provides facilities for using the GLPK solver system on your problem, with a sizable number
     of options available.
 
-Category:      Math
-cabal-version: >= 1.4
-cabal-version:  >= 1.2
+Category:       Math
+cabal-version:  >= 1.8
 build-type:     Simple
 
-extra-source-files: examples/example1.hs
-
 library
+  hs-source-dirs:   src  
   Build-Depends:    base >= 4 && < 5, array, containers, mtl, deepseq, linear
   Exposed-modules:  Data.LinearProgram,
                     Data.LinearProgram.Common,
@@ -31,14 +29,14 @@ library
                     Data.LinearProgram.GLPK,
                     Data.LinearProgram.GLPK.Solver,
                     Data.LinearProgram.GLPK.IO,
-                    Control.Monad.LPMonad,
-                    Control.Monad.LPMonad.Supply,
-                    Control.Monad.LPMonad.Supply.Class
+                    Data.LinearProgram.LPMonad,
+                    Data.LinearProgram.LPMonad.Supply,
+                    Data.LinearProgram.LPMonad.Supply.Class
   Other-modules:    Data.LinearProgram.GLPK.Internal,	
                     Data.LinearProgram.GLPK.Types,
                     Data.LinearProgram.GLPK.Common,
                     Data.LinearProgram.GLPK.IO.Internal,
-                    Control.Monad.LPMonad.Internal,
+                    Data.LinearProgram.LPMonad.Internal,
                     Data.LinearProgram.Spec,
                     Data.LinearProgram.Types
   c-sources:        glpk/glpk.c

@@ -1,6 +1,5 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving, MultiParamTypeClasses, FlexibleInstances, UndecidableInstances #-}
-
-module Control.Monad.LPMonad.Supply (module Control.Monad.LPMonad.Supply.Class, Var(..), VSupply, VSupplyT, runVSupply, runVSupplyT) where
+module Data.LinearProgram.LPMonad.Supply (module Data.LinearProgram.LPMonad.Supply.Class, Var(..), VSupply, VSupplyT, runVSupply, runVSupplyT) where
 
 import Control.Applicative
 import Control.Monad.Identity
@@ -10,7 +9,7 @@ import Control.Monad.RWS.Class
 import Control.Monad.Cont.Class
 import Control.Monad.Error.Class
 
-import Control.Monad.LPMonad.Supply.Class
+import Data.LinearProgram.LPMonad.Supply.Class
 
 -- | A type suitable for use as a linear program variable.
 newtype Var = Var {varId :: Int} deriving (Eq, Ord, Enum)

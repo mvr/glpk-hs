@@ -1,6 +1,5 @@
 {-# LANGUAGE BangPatterns, FlexibleContexts, RecordWildCards #-}
-
-module Control.Monad.LPMonad.Internal (
+module Data.LinearProgram.LPMonad.Internal (
 --      module Data.LinearProgram.Common,
         -- * Monad definitions
         LPM,
@@ -52,7 +51,6 @@ import Data.Monoid
 import Linear.Vector
 
 import Data.LinearProgram.Common
-import Data.LinearProgram.LinExpr
 
 -- | A simple monad for constructing linear programs.  This library is intended to be able to link to
 -- a variety of different linear programming implementations.

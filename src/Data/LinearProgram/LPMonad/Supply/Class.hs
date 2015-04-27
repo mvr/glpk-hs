@@ -1,5 +1,5 @@
 {-# LANGUAGE UndecidableInstances, FlexibleInstances, MultiParamTypeClasses, FunctionalDependencies #-}
-module Control.Monad.LPMonad.Supply.Class where
+module Data.LinearProgram.LPMonad.Supply.Class where
 
 import Control.Monad
 
