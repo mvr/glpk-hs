@@ -15,10 +15,10 @@ foreign import ccall unsafe "&c_glp_delete_prob" glpDelProb :: FunPtr (Ptr GlpPr
 data GlpProb
 
 data ReturnCode = Success | InvalidBasis | SingularMatrix | IllConditionedMatrix |
-	InvalidBounds | SolverFailed | ObjLowerLimReached | ObjUpperLimReached |
-	IterLimReached | TimeLimReached | NoPrimalFeasible | NoDualFeasible | RootLPOptMissing |
-	SearchTerminated | MipGapTolReached | NoPrimDualFeasSolution | NoConvergence |
-	NumericalInstability | InvalidData | ResultOutOfRange deriving (Eq, Show, Enum)
+        InvalidBounds | SolverFailed | ObjLowerLimReached | ObjUpperLimReached |
+        IterLimReached | TimeLimReached | NoPrimalFeasible | NoDualFeasible | RootLPOptMissing |
+        SearchTerminated | MipGapTolReached | NoPrimDualFeasSolution | NoConvergence |
+        NumericalInstability | InvalidData | ResultOutOfRange deriving (Eq, Show, Enum)
 
 gaveAnswer :: ReturnCode -> Bool
 gaveAnswer = flip elem [Success, IterLimReached, TimeLimReached, SearchTerminated, MipGapTolReached]
@@ -26,15 +26,15 @@ gaveAnswer = flip elem [Success, IterLimReached, TimeLimReached, SearchTerminate
 newtype GLPK a = GLP {execGLPK :: Ptr GlpProb -> IO a}
 
 runGLPK :: GLPK a -> IO a
-runGLPK m = do	lp <- newForeignPtr glpDelProb =<< glpCreateProb
-		withForeignPtr lp (execGLPK m)
+runGLPK m = do  lp <- newForeignPtr glpDelProb =<< glpCreateProb
+                withForeignPtr lp (execGLPK m)
 
 instance Monad GLPK where
-	{-# INLINE return #-}
-	{-# INLINE (>>=) #-}
-	return x = GLP $ \ _ -> return x
-	m >>= k = GLP $ \ lp -> do	x <- execGLPK m lp
-					execGLPK (k x) lp
+        {-# INLINE return #-}
+        {-# INLINE (>>=) #-}
+        return x = GLP $ \ _ -> return x
+        m >>= k = GLP $ \ lp -> do      x <- execGLPK m lp
+                                        execGLPK (k x) lp
 
 instance Functor GLPK where
   fmap = liftM
@@ -44,7 +44,7 @@ instance Applicative GLPK where
   (<*>) = ap
 
 instance MonadIO GLPK where
-	liftIO m = GLP (const m)
+        liftIO m = GLP (const m)
 
 data MsgLev = MsgOff | MsgErr | MsgOn | MsgAll deriving (Eq, Enum, Read, Show)
 data BranchingTechnique = FirstFrac | LastFrac | MostFrac | DrTom | HybridP deriving (Eq, Enum, Read, Show)
