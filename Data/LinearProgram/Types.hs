@@ -7,20 +7,26 @@ import Data.Monoid
 
 data VarKind = ContVar | IntVar | BinVar deriving (Eq, Ord, Enum, Show, Read)
 
--- instance NFData VarKind
-
 instance Monoid VarKind where
         mempty = ContVar
         mappend = max
 
+instance NFData VarKind
+
+
 data Direction = Min | Max deriving (Eq, Ord, Enum, Show, Read)
 
--- instance NFData Direction
+instance NFData Direction
 
 data Bounds a =
         Free | LBound !a | UBound !a | Equ !a | Bound !a !a deriving (Eq, Show, Read, Functor)
 
--- instance NFData (Bounds a)
+instance NFData c => NFData (Bounds c) where
+        rnf Free = ()
+        rnf (Equ c) = rnf c
+        rnf (LBound c) = rnf c
+        rnf (UBound c) = rnf c
+        rnf (Bound l u) = l `deepseq` rnf u
 
 -- Bounds form a monoid under intersection.
 instance Ord a => Monoid (Bounds a) where

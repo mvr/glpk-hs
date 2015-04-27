@@ -2,7 +2,6 @@
 module Data.LinearProgram.Spec (Constraint(..), VarTypes, ObjectiveFunc, VarBounds, LP(..),
         mapVars, mapVals, allVars) where
 
-import Control.Applicative ((<$>))
 import Control.DeepSeq
 import Control.Monad
 
@@ -13,8 +12,8 @@ import Data.Map hiding (map, foldl)
 
 import Text.ParserCombinators.ReadP
 
-import Data.Algebra
 import Data.LinearProgram.Types
+import Data.LinearProgram.LinExpr
 
 -- | Representation of a linear constraint on the variables, possibly labeled.
 -- The function may be bounded both above and below.
@@ -134,10 +133,10 @@ readBds cst expr = do
 --      are mutually contradictory.
 --
 -- * In variable kinds, the most restrictive kind will be retained.
-mapVars :: (Ord v', Ord c, Group c) => (v -> v') -> LP v c -> LP v' c
+mapVars :: (Ord v', Ord c, Num c) => (v -> v') -> LP v c -> LP v' c
 mapVars f LP{..} =
-        LP{objective = mapKeysWith (^+^) f objective,
-                constraints = [Constr lab (mapKeysWith (^+^) f func) bd | Constr lab func bd <- constraints],
+        LP{objective = mapKeysWith (+) f objective,
+                constraints = [Constr lab (mapKeysWith (+) f func) bd | Constr lab func bd <- constraints],
                 varBounds = mapKeysWith mappend f varBounds,
                 varTypes = mapKeysWith mappend f varTypes, ..}
 
@@ -152,14 +151,3 @@ instance (NFData v, NFData c) => NFData (Constraint v c) where
 instance (NFData v, NFData c) => NFData (LP v c) where
         rnf LP{..} = direction `deepseq` objective `deepseq` constraints `deepseq`
                 varBounds `deepseq` rnf varTypes
-
-instance NFData VarKind
-instance NFData Direction
-instance NFData c => NFData (Bounds c) where
-        rnf Free = ()
-        rnf (Equ c) = rnf c
-        rnf (LBound c) = rnf c
-        rnf (UBound c) = rnf c
-        rnf (Bound l u) = l `deepseq` rnf u
--- instance (NFData k, NFData a) => NFData (Map k a) where
---      rnf m = foldrWithKey (\ k a -> deepseq k . deepseq a) () m

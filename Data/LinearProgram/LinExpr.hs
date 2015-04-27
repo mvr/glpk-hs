@@ -1,17 +1,17 @@
-{-# LANGUAGE FlexibleInstances, MultiParamTypeClasses #-}
-module Data.LinearProgram.LinExpr (LinExpr(..), solve, substituteExpr, simplifyExpr,
+{-# LANGUAGE FlexibleInstances, MultiParamTypeClasses, DeriveFunctor #-}
+module Data.LinearProgram.LinExpr (LinExpr(..), LinFunc, solve, substituteExpr, simplifyExpr,
         constTerm, coeffTerm, funcToExpr) where
 
-import Control.Monad
-
-import Data.LinearProgram.Types
-import Data.Algebra
-import Data.Functor
-import Data.Foldable
-
-import Data.Map
-
 import Prelude hiding (lookup, filter, foldr)
+
+import Control.Applicative
+import Control.Monad
+import qualified Data.Map as M
+import Data.Map (Map)
+import Linear.Vector
+
+type LinFunc = Map
+data LinExpr v c = LinExpr (LinFunc v c) c deriving (Eq, Read, Show, Functor)
 
 constTerm :: LinExpr v c -> c
 constTerm (LinExpr _ c) = c
@@ -19,40 +19,37 @@ constTerm (LinExpr _ c) = c
 coeffTerm :: LinExpr v c -> LinFunc v c
 coeffTerm (LinExpr a _) = a
 
-funcToExpr :: Group c => LinFunc v c -> LinExpr v c
-funcToExpr = flip LinExpr zero
+funcToExpr :: (Num c) => LinFunc v c -> LinExpr v c
+funcToExpr = flip LinExpr 0
 
-data LinExpr v c = LinExpr (LinFunc v c) c deriving (Eq, Read, Show)
+instance (Ord v) => Additive (LinExpr v) where
+        zero = LinExpr zero 0
+        LinExpr a1 c1 ^+^ LinExpr a2 c2 = LinExpr (a1 ^+^ a2) (c1 + c2)
+        LinExpr a1 c1 ^-^ LinExpr a2 c2 = LinExpr (a1 ^-^ a2) (c1 - c2)
 
-instance (Ord v, Group c) => Group (LinExpr v c) where
-        zero = LinExpr zero zero
-        LinExpr a1 c1 ^+^ LinExpr a2 c2 = LinExpr (a1 ^+^ a2) (c1 ^+^ c2)
-        LinExpr a1 c1 ^-^ LinExpr a2 c2 = LinExpr (a1 ^-^ a2) (c1 ^-^ c2)
-        neg (LinExpr a c) = LinExpr (neg a) (neg c)
+        liftU2 f (LinExpr a1 c1) (LinExpr a2 c2) = LinExpr (M.unionWith f a1 a2) (f c1 c2)
+        liftI2 f (LinExpr a1 c1) (LinExpr a2 c2) = LinExpr (M.intersectionWith f a1 a2) (f c1 c2)
 
-instance (Ord v, Module r c) => Module r (LinExpr v c) where
-        k *^ LinExpr a c = LinExpr (k *^ a) (k *^ c)
-
-substituteExpr :: (Ord v, Module c c) => v -> LinExpr v c -> LinExpr v c -> LinExpr v c
-substituteExpr v expV expr@(LinExpr a c) = case lookup v a of
+substituteExpr :: (Ord v, Num c) => v -> LinExpr v c -> LinExpr v c -> LinExpr v c
+substituteExpr v expV expr@(LinExpr a c) = case M.lookup v a of
         Nothing -> expr
-        Just k  -> LinExpr (delete v a) c ^+^ (k *^ expV)
+        Just k  -> LinExpr (M.delete v a) c ^+^ (k *^ expV)
 
-simplifyExpr :: (Ord v, Module c c) => LinExpr v c -> Map v (LinExpr v c) -> LinExpr v c
+simplifyExpr :: (Ord v, Num c) => LinExpr v c -> Map v (LinExpr v c) -> LinExpr v c
 simplifyExpr (LinExpr a c) sol =
-        foldrWithKey (const (^+^)) (LinExpr (difference a sol) c) (intersectionWith (*^) a sol)
+        M.foldrWithKey (const (^+^)) (LinExpr (M.difference a sol) c) (M.intersectionWith (*^) a sol)
 
-solve :: (Ord v, Eq c, VectorSpace c c) => [(LinFunc v c, c)] -> Maybe (Map v (LinExpr v c))
-solve equs = solve' [LinExpr a (neg c) | (a, c) <- equs]
+solve :: (Ord v, Eq c, Fractional c) => [(LinFunc v c, c)] -> Maybe (Map v (LinExpr v c))
+solve equs = solve' [LinExpr a (negate c) | (a, c) <- equs]
 
-solve' :: (Ord v, Eq c, VectorSpace c c) => [LinExpr v c] -> Maybe (Map v (LinExpr v c))
-solve' (LinExpr a c:equs) = case minViewWithKey (filter (/= zero) a) of
-        Nothing -> guard (c == zero) >> solve' equs
-        Just ((x, a0), a') -> let expX = neg (inv a0 *^ LinExpr a' c) in
-                liftM (simplifyExpr expX >>= insert x) (solve' (substituteExpr x expX <$> equs))
-solve' [] = return empty
+solve' :: (Ord v, Eq c, Fractional c) => [LinExpr v c] -> Maybe (Map v (LinExpr v c))
+solve' (LinExpr a c:equs) = case M.minViewWithKey a of
+        Nothing -> guard (c == 0) >> solve' equs
+        Just ((x, a0), a') -> let expX = negated (recip a0 *^ LinExpr a' c) in
+                liftM (simplifyExpr expX >>= M.insert x) (solve' (substituteExpr x expX <$> equs))
+solve' [] = return M.empty
 
 {-# RULES
         "mapWithKey/mapWithKey" forall f g m .
-                mapWithKey f (mapWithKey g m) = mapWithKey (liftM2 (.) f g) m
+                M.mapWithKey f (M.mapWithKey g m) = M.mapWithKey (liftM2 (.) f g) m
         #-}
