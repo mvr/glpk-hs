@@ -2,6 +2,8 @@
 
 module Data.LinearProgram.GLPK.Types where
 
+import Control.Applicative
+import Control.Monad
 import Control.Monad.Trans (MonadIO (..))
 
 import Foreign.Ptr
@@ -12,8 +14,8 @@ foreign import ccall unsafe "&c_glp_delete_prob" glpDelProb :: FunPtr (Ptr GlpPr
 
 data GlpProb
 
-data ReturnCode = Success | InvalidBasis | SingularMatrix | IllConditionedMatrix | 
-	InvalidBounds | SolverFailed | ObjLowerLimReached | ObjUpperLimReached | 
+data ReturnCode = Success | InvalidBasis | SingularMatrix | IllConditionedMatrix |
+	InvalidBounds | SolverFailed | ObjLowerLimReached | ObjUpperLimReached |
 	IterLimReached | TimeLimReached | NoPrimalFeasible | NoDualFeasible | RootLPOptMissing |
 	SearchTerminated | MipGapTolReached | NoPrimDualFeasSolution | NoConvergence |
 	NumericalInstability | InvalidData | ResultOutOfRange deriving (Eq, Show, Enum)
@@ -33,6 +35,13 @@ instance Monad GLPK where
 	return x = GLP $ \ _ -> return x
 	m >>= k = GLP $ \ lp -> do	x <- execGLPK m lp
 					execGLPK (k x) lp
+
+instance Functor GLPK where
+  fmap = liftM
+
+instance Applicative GLPK where
+  pure  = return
+  (<*>) = ap
 
 instance MonadIO GLPK where
 	liftIO m = GLP (const m)

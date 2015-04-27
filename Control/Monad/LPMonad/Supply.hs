@@ -2,6 +2,7 @@
 
 module Control.Monad.LPMonad.Supply (module Control.Monad.LPMonad.Supply.Class, Var(..), VSupply, VSupplyT, runVSupply, runVSupplyT) where
 
+import Control.Applicative
 import Control.Monad.Identity
 import Control.Monad.Trans
 import Control.Monad.State.Strict
@@ -21,7 +22,7 @@ runVSupply :: VSupply a -> a
 runVSupply = runIdentity . runVSupplyT
 
 -- | A monad transformer capable of supplying unique variables.
-newtype VSupplyT m a = VSupplyT (StateT Var m a) deriving (Functor, Monad, MonadPlus, MonadTrans, MonadReader r, MonadWriter w, MonadCont,
+newtype VSupplyT m a = VSupplyT (StateT Var m a) deriving (Functor, Applicative, Alternative, Monad, MonadPlus, MonadTrans, MonadReader r, MonadWriter w, MonadCont,
 	MonadIO, MonadFix, MonadError e)
 
 runVSupplyT :: Monad m => VSupplyT m a -> m a
