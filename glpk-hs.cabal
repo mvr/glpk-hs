@@ -8,7 +8,7 @@ Stability:      experimental
 Synopsis:       Comprehensive GLPK linear programming bindings
 Description:
     Friendly interface to GLPK's linear programming and mixed integer programming features.  Intended for easy extensibility,
-    with a general, pure-Haskell representation of linear programs.  Also includes usefully general algebraic structures.
+    with a general, pure-Haskell representation of linear programs.
     
     To design a linear programming problem, 
     use "Data.LinearProgram.LPMonad" to construct the constraints and specifications.  Linear functions are essentially specified
