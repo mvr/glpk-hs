@@ -22,7 +22,12 @@ build-type:     Simple
 
 library
   hs-source-dirs:   src  
-  Build-Depends:    base >= 4 && < 5, array, containers, mtl, deepseq, linear
+  Build-Depends:    base >= 4 && < 5
+                  , array
+                  , containers
+                  , mtl >= 2.2
+                  , deepseq
+                  , linear
   Exposed-modules:  Data.LinearProgram,
                     Data.LinearProgram.Common,
                     Data.LinearProgram.LinExpr,
