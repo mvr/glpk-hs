@@ -11,12 +11,13 @@ instance Monoid VarKind where
         mempty = ContVar
         mappend = max
 
-instance NFData VarKind
-
+instance NFData VarKind where
+  rnf _ = ()
 
 data Direction = Min | Max deriving (Eq, Ord, Enum, Show, Read)
 
-instance NFData Direction
+instance NFData Direction where
+  rnf _ = ()
 
 data Bounds a =
         Free | LBound !a | UBound !a | Equ !a | Bound !a !a deriving (Eq, Show, Read, Functor)
